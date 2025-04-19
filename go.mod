@@ -2,7 +2,7 @@ module github.com/sagernet/sing-box
 
 go 1.20
 
-replace github.com/sagernet/sing-dns => github.com/Mahdi-zarei/sing-dns v0.3.0-beta.14.0.20250201180230-3ed9d1ef74d5
+replace github.com/sagernet/sing-dns => github.com/Mahdi-zarei/sing-dns v0.3.0-beta.14.0.20250507225909-53baf4f30fa3
 
 require (
 	github.com/caddyserver/certmagic v0.20.0
