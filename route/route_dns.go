@@ -127,6 +127,24 @@ func (r *Router) Exchange(ctx context.Context, message *mDNS.Msg) (*mDNS.Msg, er
 		}
 		return &responseMessage, nil
 	}
+	if fqdnToDomain(message.Question[0].Name) == "localhost" && message.Question[0].Qtype == mDNS.TypeA {
+		return &mDNS.Msg{
+			MsgHdr: mDNS.MsgHdr{
+				Id:       message.Id,
+				Rcode:    mDNS.RcodeSuccess,
+				Response: true,
+			},
+			Question: []mDNS.Question{message.Question[0]},
+			Answer: []mDNS.RR{&mDNS.A{
+				Hdr: mDNS.RR_Header{
+					Name:   message.Question[0].Name,
+					Rrtype: mDNS.TypeA,
+					Class:  mDNS.ClassINET,
+					Ttl:    dns.DefaultTTL,
+				},
+				A: netip.MustParseAddr("127.0.0.1").AsSlice()}},
+		}, nil
+	}
 	var (
 		response  *mDNS.Msg
 		cached    bool
@@ -242,6 +260,9 @@ func (r *Router) Lookup(ctx context.Context, domain string, strategy dns.DomainS
 				r.dnsLogger.ErrorContext(ctx, E.Cause(err, "lookup failed for ", domain))
 			}
 		}
+	}
+	if domain == "localhost" {
+		return []netip.Addr{netip.MustParseAddr("127.0.0.1")}, nil
 	}
 	responseAddrs, cached = r.dnsClient.LookupCache(ctx, domain, strategy)
 	if cached {
