@@ -1,8 +1,13 @@
 module github.com/sagernet/sing-box
 
-go 1.20
+go 1.23.6
 
-replace github.com/sagernet/sing-dns => github.com/Mahdi-zarei/sing-dns v0.3.0-beta.14.0.20250507225909-53baf4f30fa3
+toolchain go1.24.3
+
+replace (
+	github.com/sagernet/sing-dns => github.com/Mahdi-zarei/sing-dns v0.3.0-beta.14.0.20250507225909-53baf4f30fa3
+	github.com/sagernet/wireguard-go => github.com/throneproj/wireguard-go v0.0.1-beta.7.0.20250728063157-408bba78ad26
+)
 
 require (
 	github.com/caddyserver/certmagic v0.20.0
@@ -90,6 +95,7 @@ require (
 	github.com/sagernet/netlink v0.0.0-20240612041022-b9a21c07ac6a // indirect
 	github.com/sagernet/nftables v0.3.0-beta.4 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/tevino/abool/v2 v2.1.0 // indirect
 	github.com/u-root/uio v0.0.0-20230220225925-ffce2a382923 // indirect
 	github.com/vishvananda/netns v0.0.4 // indirect
 	github.com/zeebo/blake3 v0.2.3 // indirect
