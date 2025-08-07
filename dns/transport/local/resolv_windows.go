@@ -6,6 +6,7 @@ import (
 	"net/netip"
 	"os"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 	"unsafe"
@@ -15,6 +16,12 @@ import (
 	"github.com/sagernet/sing/service"
 
 	"golang.org/x/sys/windows"
+)
+
+const (
+	localAddr    = "127.0.0.1"
+	dhcpMarkAddr = "127.1.2.3"
+	setMarkAddr  = "127.3.2.1"
 )
 
 func dnsReadConfig(ctx context.Context, _ string) *dnsConfig {
@@ -82,12 +89,26 @@ func dnsReadConfig(ctx context.Context, _ string) *dnsConfig {
 	if networkManager := service.FromContext[adapter.NetworkManager](ctx); networkManager != nil {
 		myInterfaces = networkManager.InterfaceMonitor().MyInterfaces()
 	}
+	customDns := false
 	for _, address := range dnsAddresses {
 		if common.Contains(myInterfaces, address.ifName) {
 			continue
 		}
+		if address.String() == dhcpMarkAddr || address.String() == setMarkAddr {
+			customDns = true
+			continue
+		}
 		conf.servers = append(conf.servers, net.JoinHostPort(address.String(), "53"))
 	}
+	servers := make([]string, 0)
+	for _, server := range conf.servers {
+		addr := strings.Split(server, ":")[0]
+		if addr == localAddr && customDns {
+			continue
+		}
+		servers = append(servers, server)
+	}
+	conf.servers = servers
 	return conf
 }
 
