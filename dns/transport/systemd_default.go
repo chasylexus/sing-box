@@ -2,21 +2,27 @@ package transport
 
 import (
 	"context"
+	mDNS "github.com/miekg/dns"
 	"github.com/sagernet/sing-box/adapter"
 	C "github.com/sagernet/sing-box/constant"
 	"github.com/sagernet/sing-box/dns"
 	"github.com/sagernet/sing-box/log"
 	"github.com/sagernet/sing-box/option"
+	tun "github.com/sagernet/sing-tun"
 	"github.com/sagernet/sing/common/control"
 	E "github.com/sagernet/sing/common/exceptions"
 	"github.com/sagernet/sing/common/metadata"
 	"github.com/sagernet/sing/service"
 	"os/exec"
 	"strings"
+	"sync"
 )
 
 type SystemdDefault struct {
 	*UDPTransport
+	unspecified   bool
+	ifcMonitor    tun.DefaultInterfaceMonitor
+	manualCheckMu sync.Mutex
 }
 
 func RegisterUnderlying(registry *dns.TransportRegistry) {
@@ -29,11 +35,31 @@ func NewSystemdDefault(ctx context.Context, logger log.ContextLogger, tag string
 		return nil, err
 	}
 	transport := NewUDPRaw(logger, dns.NewTransportAdapterWithRemoteOptions(C.DNSTypeUDP, tag, options), transportDialer, metadata.ParseSocksaddr("0.0.0.0:0"))
-	s := &SystemdDefault{UDPTransport: transport}
+	s := &SystemdDefault{UDPTransport: transport, unspecified: true}
 	nm := service.FromContext[adapter.NetworkManager](ctx)
 	nm.InterfaceMonitor().RegisterCallback(s.handleInterfaceUpdate)
 	s.handleInterfaceUpdate(nm.InterfaceMonitor().DefaultInterface(), 0)
+	s.ifcMonitor = nm.InterfaceMonitor()
 	return s, nil
+}
+
+func (s *SystemdDefault) Exchange(ctx context.Context, message *mDNS.Msg) (*mDNS.Msg, error) {
+	if !s.unspecified {
+		return s.UDPTransport.Exchange(ctx, message)
+	}
+	s.manualCheckMu.Lock()
+	if !s.unspecified {
+		s.manualCheckMu.Unlock()
+		return s.UDPTransport.Exchange(ctx, message)
+	}
+	defaultIfc := s.ifcMonitor.DefaultInterface()
+	if defaultIfc == nil {
+		s.manualCheckMu.Unlock()
+		return nil, E.New("No default interface")
+	}
+	s.handleInterfaceUpdate(defaultIfc, 0)
+	s.manualCheckMu.Unlock()
+	return s.UDPTransport.Exchange(ctx, message)
 }
 
 func (s *SystemdDefault) handleInterfaceUpdate(defaultInterface *control.Interface, flags int) {
@@ -43,6 +69,7 @@ func (s *SystemdDefault) handleInterfaceUpdate(defaultInterface *control.Interfa
 			s.conn.Close(E.New("interface changed"))
 		}
 		s.serverAddr = metadata.ParseSocksaddr("0.0.0.0:0")
+		s.unspecified = true
 		s.access.Unlock()
 	}
 
@@ -70,6 +97,7 @@ func (s *SystemdDefault) handleInterfaceUpdate(defaultInterface *control.Interfa
 		s.conn.Close(E.New("interface changed"))
 	}
 	s.serverAddr = server
+	s.unspecified = false
 	s.logger.Info("underlying dns set to ", server)
 	s.access.Unlock()
 }
