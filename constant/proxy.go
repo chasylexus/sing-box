@@ -31,6 +31,7 @@ const (
 	TypeCCM          = "ccm"
 	TypeOCM          = "ocm"
 	TypeOOMKiller    = "oom-killer"
+	TypeTrustTunnel  = "trusttunnel"
 
 	TypeJuicity = "juicity"
 )
@@ -92,6 +93,8 @@ func ProxyDisplayName(proxyType string) string {
 		return "Tailscale"
 	case TypeJuicity:
 		return "Juicity"
+	case TypeTrustTunnel:
+		return "TrustTunnel"
 	case TypeSelector:
 		return "Selector"
 	case TypeURLTest:
