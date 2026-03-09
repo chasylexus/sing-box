@@ -2,6 +2,10 @@ package transport
 
 import (
 	"context"
+	"os/exec"
+	"strings"
+	"sync"
+
 	mDNS "github.com/miekg/dns"
 	"github.com/sagernet/sing-box/adapter"
 	C "github.com/sagernet/sing-box/constant"
@@ -13,9 +17,6 @@ import (
 	E "github.com/sagernet/sing/common/exceptions"
 	"github.com/sagernet/sing/common/metadata"
 	"github.com/sagernet/sing/service"
-	"os/exec"
-	"strings"
-	"sync"
 )
 
 type SystemdDefault struct {
@@ -63,9 +64,9 @@ func (s *SystemdDefault) Exchange(ctx context.Context, message *mDNS.Msg) (*mDNS
 }
 
 func (s *SystemdDefault) handleInterfaceUpdate(defaultInterface *control.Interface, flags int) {
+	defer s.connector.Reset()
 	failedFunc := func() {
 		s.connector.access.Lock()
-		s.connector.Reset()
 		s.serverAddr = metadata.ParseSocksaddr("0.0.0.0:0")
 		s.unspecified = true
 		s.connector.access.Unlock()
@@ -91,7 +92,6 @@ func (s *SystemdDefault) handleInterfaceUpdate(defaultInterface *control.Interfa
 		return
 	}
 	s.connector.access.Lock()
-	s.connector.Reset()
 	s.serverAddr = server
 	s.unspecified = false
 	s.Logger.Info("underlying dns set to ", server)
