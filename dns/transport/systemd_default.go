@@ -64,16 +64,16 @@ func (s *SystemdDefault) Exchange(ctx context.Context, message *mDNS.Msg) (*mDNS
 }
 
 func (s *SystemdDefault) handleInterfaceUpdate(defaultInterface *control.Interface, flags int) {
-	defer s.connector.Reset()
+	defer s.connection.Reset()
 	failedFunc := func() {
-		s.connector.access.Lock()
+		s.connection.access.Lock()
 		s.serverAddr = metadata.ParseSocksaddr("0.0.0.0:0")
 		s.unspecified = true
-		s.connector.access.Unlock()
+		s.connection.access.Unlock()
 	}
 
 	if defaultInterface == nil {
-		s.Logger.Error("No default interface")
+		s.logger.Error("No default interface")
 		failedFunc()
 		return
 	}
@@ -81,21 +81,21 @@ func (s *SystemdDefault) handleInterfaceUpdate(defaultInterface *control.Interfa
 	args := []string{"-i", defaultInterface.Name, "dns"}
 	res, err := exec.Command(cmd, args...).Output()
 	if err != nil {
-		s.Logger.Error("Could not call resolvectl ", err)
+		s.logger.Error("Could not call resolvectl ", err)
 		failedFunc()
 		return
 	}
 	server, err := s.parseResolvectlOutput(string(res))
 	if err != nil {
-		s.Logger.Error("failed to parse resolvectl output ", err)
+		s.logger.Error("failed to parse resolvectl output ", err)
 		failedFunc()
 		return
 	}
-	s.connector.access.Lock()
+	s.connection.access.Lock()
 	s.serverAddr = server
 	s.unspecified = false
-	s.Logger.Info("underlying dns set to ", server)
-	s.connector.access.Unlock()
+	s.logger.Info("underlying dns set to ", server)
+	s.connection.access.Unlock()
 }
 
 func (s *SystemdDefault) parseResolvectlOutput(out string) (metadata.Socksaddr, error) {
