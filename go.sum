@@ -236,8 +236,8 @@ github.com/sagernet/netlink v0.0.0-20240612041022-b9a21c07ac6a h1:ObwtHN2VpqE0ZN
 github.com/sagernet/netlink v0.0.0-20240612041022-b9a21c07ac6a/go.mod h1:xLnfdiJbSp8rNqYEdIW/6eDO4mVoogml14Bh2hSiFpM=
 github.com/sagernet/nftables v0.3.0-mod.2 h1:ck2KMU02OxL1eDFgGaWYglMDpoOZ7OHzxje+vW5Q0OQ=
 github.com/sagernet/nftables v0.3.0-mod.2/go.mod h1:8kslHG4VvYNihcco+i6uxIX7qbT8A56T0y5q7U44ZaQ=
-github.com/sagernet/quic-go v0.59.0-sing-box-mod.4 h1:6qvrUW79S+CrPwWz6cMePXohgjHoKxLo3c+MDhNwc3o=
-github.com/sagernet/quic-go v0.59.0-sing-box-mod.4/go.mod h1:OqILvS182CyOol5zNNo6bguvOGgXzV459+chpRaUC+4=
+github.com/sagernet/quic-go v0.59.0-sing-box-mod.5 h1:73oI/46ckKWtPYtke10oR2T0xqdPhqJzKxMwUjyTG30=
+github.com/sagernet/quic-go v0.59.0-sing-box-mod.5/go.mod h1:OqILvS182CyOol5zNNo6bguvOGgXzV459+chpRaUC+4=
 github.com/sagernet/sing v0.8.9 h1:iX8FyMrWNl/divVgTe7cLT9n36v6bfzfnCYlcM1cLaU=
 github.com/sagernet/sing v0.8.9/go.mod h1:ARkL0gM13/Iv5VCZmci/NuoOlePoIsW0m7BWfln/Hak=
 github.com/sagernet/sing-mux v0.3.4 h1:ZQplKl8MNXutjzbMVtWvWG31fohhgOfCuUZR4dVQ8+s=
@@ -303,8 +303,8 @@ github.com/vishvananda/netns v0.0.5 h1:DfiHV+j8bA32MFM7bfEunvT8IAqQ/NzSJHtcmW5zd
 github.com/vishvananda/netns v0.0.5/go.mod h1:SpkAiCQRtJ6TvvxPnOSyH3BMl6unz3xZlaprSwhNNJM=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
 github.com/x448/float16 v0.8.4/go.mod h1:14CWIYCyZA/cWjXOioeEpHeN/83MdbZDRQHoFcYsOfg=
-github.com/xchacha20-poly1305/sing-trusttunnel v0.2.1-0.20260314153016-08d91e19d8c2 h1:3uEyOiBSSLwwavDBHw++ajcTpCFotkkzqKpJb02ANoc=
-github.com/xchacha20-poly1305/sing-trusttunnel v0.2.1-0.20260314153016-08d91e19d8c2/go.mod h1:DwhGZ+Xy+r2LCoqVgGgk4opoiCRbrwNzcn41OePwIrU=
+github.com/xchacha20-poly1305/sing-trusttunnel v0.2.3-0.20260514133218-5c3ed84e2e26 h1:rBvJ9/NZH6YKvKRBvLzP4OeBJG5B0Mj8ukTQQt8HtZY=
+github.com/xchacha20-poly1305/sing-trusttunnel v0.2.3-0.20260514133218-5c3ed84e2e26/go.mod h1:ekbygU19X0rL8AYsCSzo9gnfT4dSt/bgvtv/hwbmfBY=
 github.com/zeebo/assert v1.1.0 h1:hU1L1vLTHsnO8x8c9KAR5GmM5QscxHg5RNU5z5qbUWY=
 github.com/zeebo/assert v1.1.0/go.mod h1:Pq9JiuJQpG8JLJdtkwrJESF0Foym2/D9XMU5ciN/wJ0=
 github.com/zeebo/blake3 v0.2.4 h1:KYQPkhpRtcqh0ssGYcKLG1JYvddkEA8QwCM/yBqhaZI=

@@ -33,7 +33,7 @@ require (
 	github.com/sagernet/fswatch v0.1.2
 	github.com/sagernet/gomobile v0.1.12
 	github.com/sagernet/gvisor v0.0.0-20250811.0-sing-box-mod.1
-	github.com/sagernet/quic-go v0.59.0-sing-box-mod.4
+	github.com/sagernet/quic-go v0.59.0-sing-box-mod.5
 	github.com/sagernet/sing v0.8.9
 	github.com/sagernet/sing-mux v0.3.4
 	github.com/sagernet/sing-quic v0.6.1
@@ -49,7 +49,7 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
 	github.com/vishvananda/netns v0.0.5
-	github.com/xchacha20-poly1305/sing-trusttunnel v0.2.1-0.20260314153016-08d91e19d8c2
+	github.com/xchacha20-poly1305/sing-trusttunnel v0.2.3-0.20260514133218-5c3ed84e2e26
 	go.uber.org/zap v1.27.1
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
 	golang.org/x/crypto v0.48.0
