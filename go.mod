@@ -169,3 +169,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/blake3 v1.3.0 // indirect
 )
+
+replace github.com/sagernet/wireguard-go => github.com/throneproj/wireguard-go v0.0.0-20260729162147-5f31c6dd9a73

@@ -108,17 +108,51 @@ func NewEndpoint(ctx context.Context, router adapter.Router, logger log.ContextL
 				PublicKey:                   it.PublicKey,
 				PreSharedKey:                it.PreSharedKey,
 				AllowedIPs:                  it.AllowedIPs,
-				PersistentKeepaliveInterval: it.PersistentKeepaliveInterval,
+				PersistentKeepaliveInterval: string(it.PersistentKeepaliveInterval),
 				Reserved:                    it.Reserved,
 			}
 		}),
-		Workers: options.Workers,
+		Workers:   options.Workers,
+		AmneziaWG: mapAmneziaWGOptions(options.AmneziaWG),
 	})
 	if err != nil {
 		return nil, err
 	}
 	ep.endpoint = wgEndpoint
 	return ep, nil
+}
+
+func mapAmneziaWGOptions(o *option.AmneziaWGOptions) *wireguard.AmneziaWGOptions {
+	if o == nil {
+		return nil
+	}
+	var signatures []string
+	for _, sig := range []string{o.I1, o.I2, o.I3, o.I4, o.I5} {
+		if sig != "" {
+			signatures = append(signatures, sig)
+		}
+	}
+	return &wireguard.AmneziaWGOptions{
+		JunkPacketCount:              o.Jc,
+		JunkPacketMinSize:            o.Jmin,
+		JunkPacketMaxSize:            o.Jmax,
+		InitPacketJunkSize:           o.S1,
+		ResponsePacketJunkSize:       o.S2,
+		CookieReplyPacketJunkSize:    o.S3,
+		TransportPacketJunkSize:      o.S4,
+		InitPacketMagicHeader:        o.H1,
+		ResponsePacketMagicHeader:    o.H2,
+		CookieReplyPacketMagicHeader: o.H3,
+		TransportPacketMagicHeader:   o.H4,
+		SignaturePackets:             signatures,
+		HeaderProtectionKey:          o.HeaderProtectionKey,
+		ContentPaddingAddition:       string(o.ContentPaddingAddition),
+		RekeyAfterTime:               string(o.RekeyAfterTime),
+		RekeyTimeout:                 string(o.RekeyTimeout),
+		RejectAfterTime:              string(o.RejectAfterTime),
+		KeepaliveTimeout:             string(o.KeepaliveTimeout),
+		MaxHandshakeAttempts:         string(o.MaxHandshakeAttempts),
+	}
 }
 
 func (w *Endpoint) Start(stage adapter.StartStage) error {
