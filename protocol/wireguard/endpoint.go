@@ -122,8 +122,31 @@ func NewEndpoint(ctx context.Context, router adapter.Router, logger log.ContextL
 }
 
 func (w *Endpoint) Start(stage adapter.StartStage) error {
+	// WireGuard is brought up lazily, on first use (see ensureStarted).
+	//
+	// Doing the real bring-up from here would run it inside the endpoint
+	// manager's start loop, which holds its lock for the whole loop and runs at
+	// the "initialize" stage — before the DNS transport and outbound managers
+	// are started. A chained endpoint (detour to another WireGuard) resolves its
+	// peer through that upstream endpoint during bring-up, which re-enters
+	// EndpointManager.Get (via OutboundManager.Outbound) and tries to take the
+	// lock the loop already holds: a deadlock. Deferring to first use moves
+	// bring-up onto a connection goroutine, after everything is started and with
+	// no manager lock held.
+	return nil
+}
+
+func (w *Endpoint) ensureStarted() error {
 	w.startOnce.Do(func() {
-		w.startErr = w.endpoint.Start(true)
+		// Start(false) brings up the device when all peers use IP endpoints;
+		// Start(true) resolves and brings up when any peer endpoint is a domain.
+		// Exactly one performs the real bring-up, the other is a no-op, so both
+		// peer kinds are covered. Start(false) never resolves or dials, so it
+		// cannot re-enter the manager lock.
+		w.startErr = w.endpoint.Start(false)
+		if w.startErr == nil {
+			w.startErr = w.endpoint.Start(true)
+		}
 		if w.startErr == nil {
 			w.started.Store(true)
 		}
@@ -137,11 +160,8 @@ func (w *Endpoint) Close() error {
 }
 
 func (w *Endpoint) PrepareConnection(network string, source M.Socksaddr, destination M.Socksaddr, routeContext tun.DirectRouteContext, timeout time.Duration) (tun.DirectRouteDestination, error) {
-	if !w.started.Load() {
-		_ = w.Start(adapter.StartStateStart)
-	}
-	if w.startErr != nil {
-		return nil, w.startErr
+	if err := w.ensureStarted(); err != nil {
+		return nil, err
 	}
 	var ipVersion uint8
 	if !destination.IsIPv6() {
@@ -173,6 +193,10 @@ func (w *Endpoint) PrepareConnection(network string, source M.Socksaddr, destina
 }
 
 func (w *Endpoint) NewConnectionEx(ctx context.Context, conn net.Conn, source M.Socksaddr, destination M.Socksaddr, onClose N.CloseHandlerFunc) {
+	if err := w.ensureStarted(); err != nil {
+		onClose(err)
+		return
+	}
 	var metadata adapter.InboundContext
 	metadata.Inbound = w.Tag()
 	metadata.InboundType = w.Type()
@@ -195,6 +219,10 @@ func (w *Endpoint) NewConnectionEx(ctx context.Context, conn net.Conn, source M.
 }
 
 func (w *Endpoint) NewPacketConnectionEx(ctx context.Context, conn N.PacketConn, source M.Socksaddr, destination M.Socksaddr, onClose N.CloseHandlerFunc) {
+	if err := w.ensureStarted(); err != nil {
+		onClose(err)
+		return
+	}
 	var metadata adapter.InboundContext
 	metadata.Inbound = w.Tag()
 	metadata.InboundType = w.Type()
@@ -217,14 +245,14 @@ func (w *Endpoint) NewPacketConnectionEx(ctx context.Context, conn N.PacketConn,
 }
 
 func (w *Endpoint) DialContext(ctx context.Context, network string, destination M.Socksaddr) (net.Conn, error) {
+	if err := w.ensureStarted(); err != nil {
+		return nil, err
+	}
 	switch network {
 	case N.NetworkTCP:
 		w.logger.InfoContext(ctx, "outbound connection to ", destination)
 	case N.NetworkUDP:
 		w.logger.InfoContext(ctx, "outbound packet connection to ", destination)
-	}
-	if !w.started.Load() {
-		return nil, E.New("WireGuard is not ready yet")
 	}
 	if destination.IsDomain() {
 		destinationAddresses, err := w.dnsRouter.Lookup(ctx, destination.Fqdn, adapter.DNSQueryOptions{})
@@ -239,10 +267,10 @@ func (w *Endpoint) DialContext(ctx context.Context, network string, destination 
 }
 
 func (w *Endpoint) ListenPacketWithDestination(ctx context.Context, destination M.Socksaddr) (net.PacketConn, netip.Addr, error) {
-	w.logger.InfoContext(ctx, "outbound packet connection to ", destination)
-	if !w.started.Load() {
-		return nil, netip.Addr{}, E.New("WireGuard is not ready yet")
+	if err := w.ensureStarted(); err != nil {
+		return nil, netip.Addr{}, err
 	}
+	w.logger.InfoContext(ctx, "outbound packet connection to ", destination)
 	if destination.IsDomain() {
 		destinationAddresses, err := w.dnsRouter.Lookup(ctx, destination.Fqdn, adapter.DNSQueryOptions{})
 		if err != nil {
@@ -261,6 +289,9 @@ func (w *Endpoint) ListenPacketWithDestination(ctx context.Context, destination 
 }
 
 func (w *Endpoint) ListenPacket(ctx context.Context, destination M.Socksaddr) (net.PacketConn, error) {
+	if err := w.ensureStarted(); err != nil {
+		return nil, err
+	}
 	packetConn, destinationAddress, err := w.ListenPacketWithDestination(ctx, destination)
 	if err != nil {
 		return nil, err
@@ -283,8 +314,8 @@ func (w *Endpoint) PreferredAddress(address netip.Addr) bool {
 }
 
 func (w *Endpoint) NewDirectRouteConnection(metadata adapter.InboundContext, routeContext tun.DirectRouteContext, timeout time.Duration) (tun.DirectRouteDestination, error) {
-	if !w.started.Load() {
-		return nil, E.New("WireGuard is not ready yet")
+	if err := w.ensureStarted(); err != nil {
+		return nil, err
 	}
 	return w.endpoint.NewDirectRouteConnection(metadata, routeContext, timeout)
 }
