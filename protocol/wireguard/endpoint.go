@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"net/netip"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -43,6 +44,8 @@ type Endpoint struct {
 	localAddresses []netip.Prefix
 	endpoint       *wireguard.Endpoint
 	started        atomic.Bool
+	startOnce      sync.Once
+	startErr       error
 }
 
 func NewEndpoint(ctx context.Context, router adapter.Router, logger log.ContextLogger, tag string, options option.WireGuardEndpointOptions) (adapter.Endpoint, error) {
@@ -119,17 +122,13 @@ func NewEndpoint(ctx context.Context, router adapter.Router, logger log.ContextL
 }
 
 func (w *Endpoint) Start(stage adapter.StartStage) error {
-	switch stage {
-	case adapter.StartStateStart:
-		return w.endpoint.Start(false)
-	case adapter.StartStatePostStart:
-		err := w.endpoint.Start(true)
-		if err != nil {
-			return err
+	w.startOnce.Do(func() {
+		w.startErr = w.endpoint.Start(true)
+		if w.startErr == nil {
+			w.started.Store(true)
 		}
-		w.started.Store(true)
-	}
-	return nil
+	})
+	return w.startErr
 }
 
 func (w *Endpoint) Close() error {
@@ -139,7 +138,10 @@ func (w *Endpoint) Close() error {
 
 func (w *Endpoint) PrepareConnection(network string, source M.Socksaddr, destination M.Socksaddr, routeContext tun.DirectRouteContext, timeout time.Duration) (tun.DirectRouteDestination, error) {
 	if !w.started.Load() {
-		return nil, E.New("WireGuard is not ready yet")
+		_ = w.Start(adapter.StartStateStart)
+	}
+	if w.startErr != nil {
+		return nil, w.startErr
 	}
 	var ipVersion uint8
 	if !destination.IsIPv6() {
