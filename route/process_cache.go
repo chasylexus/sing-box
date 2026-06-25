@@ -2,6 +2,8 @@ package route
 
 import (
 	"context"
+	C "github.com/sagernet/sing-box/constant"
+	N "github.com/sagernet/sing/common/network"
 	"net/netip"
 	"slices"
 	"strings"
@@ -22,6 +24,9 @@ type processCacheEntry struct {
 }
 
 func (r *Router) findProcessInfoCached(ctx context.Context, network string, source netip.AddrPort, destination netip.AddrPort) (*adapter.ConnectionOwner, error) {
+	if C.IsWindows && N.NetworkName(network) == N.NetworkTCP {
+		destination = netip.AddrPort{}
+	}
 	key := processCacheKey{
 		Network:     network,
 		Source:      source,
