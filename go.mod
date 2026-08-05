@@ -1,6 +1,6 @@
 module github.com/sagernet/sing-box
 
-go 1.24.7
+go 1.25
 
 require (
 	github.com/anthropics/anthropic-sdk-go v1.26.0
@@ -9,8 +9,9 @@ require (
 	github.com/coder/websocket v1.8.14
 	github.com/cretz/bine v0.2.0
 	github.com/database64128/tfo-go/v2 v2.3.2
-	github.com/dyhkwong/sing-juicity v0.1.2
 	github.com/dblohm7/wingoes v0.0.0-20240119213807-a09d6be7affa
+	github.com/dyhkwong/sing-juicity v0.1.2
+	github.com/enfein/mieru/v3 v3.33.0
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/go-chi/render v1.0.3
 	github.com/godbus/dbus/v5 v5.2.2
@@ -34,7 +35,7 @@ require (
 	github.com/sagernet/fswatch v0.1.2
 	github.com/sagernet/gomobile v0.1.12
 	github.com/sagernet/gvisor v0.0.0-20250811.0-sing-box-mod.1
-	github.com/sagernet/quic-go v0.59.0-sing-box-mod.4
+	github.com/sagernet/quic-go v0.59.0-sing-box-mod.5
 	github.com/sagernet/sing v0.8.12
 	github.com/sagernet/sing-mux v0.3.5
 	github.com/sagernet/sing-quic v0.6.4-0.20260803041914-d83826c306d7
@@ -78,7 +79,6 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1 // indirect
 	github.com/ebitengine/purego v0.10.0 // indirect
-	github.com/enfein/mieru/v3 v3.33.0 // indirect
 	github.com/florianl/go-nfqueue/v2 v2.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
@@ -170,4 +170,4 @@ require (
 	lukechampine.com/blake3 v1.3.0 // indirect
 )
 
-replace github.com/sagernet/wireguard-go => github.com/throneproj/wireguard-go v0.0.0-20260729162147-5f31c6dd9a73
+replace github.com/sagernet/wireguard-go => github.com/throneproj/wireguard-go v0.0.0-20260805224219-00c94c33be81
