@@ -39,6 +39,8 @@ type Manager struct {
 	outbound      adapter.OutboundManager
 	uploadTotal   atomic.Int64
 	downloadTotal atomic.Int64
+	uploadMap     compatible.Map[string, *atomic.Int64]
+	downloadMap   compatible.Map[string, *atomic.Int64]
 
 	connections             compatible.Map[uuid.UUID, Tracker]
 	closedConnectionsAccess sync.Mutex
@@ -121,6 +123,37 @@ func (m *Manager) leave(tracker Tracker) {
 
 func (m *Manager) Total() (uplinkTotal int64, downlinkTotal int64) {
 	return m.uploadTotal.Load(), m.downloadTotal.Load()
+}
+
+func (m *Manager) pushUploaded(outbound string, size int64) {
+	m.uploadTotal.Add(size)
+	if outbound == "" {
+		return
+	}
+	counter, _ := m.uploadMap.LoadOrStore(outbound, new(atomic.Int64))
+	counter.Add(size)
+}
+
+func (m *Manager) pushDownloaded(outbound string, size int64) {
+	m.downloadTotal.Add(size)
+	if outbound == "" {
+		return
+	}
+	counter, _ := m.downloadMap.LoadOrStore(outbound, new(atomic.Int64))
+	counter.Add(size)
+}
+
+// TotalOutbound reports the traffic accounted to an outbound since the last
+// call and resets its counters, so consumers sampling it periodically read a
+// per-interval delta rather than a running total.
+func (m *Manager) TotalOutbound(outbound string) (uplinkTotal int64, downlinkTotal int64) {
+	if counter, loaded := m.uploadMap.Load(outbound); loaded {
+		uplinkTotal = counter.Swap(0)
+	}
+	if counter, loaded := m.downloadMap.Load(outbound); loaded {
+		downlinkTotal = counter.Swap(0)
+	}
+	return
 }
 
 func (m *Manager) ConnectionsLen() int {
