@@ -57,6 +57,10 @@ type AmneziaWGOptions struct {
 	RejectAfterTime        AmneziaWGRange `json:"reject_after_time,omitempty"`
 	KeepaliveTimeout       AmneziaWGRange `json:"keepalive_timeout,omitempty"`
 	MaxHandshakeAttempts   AmneziaWGRange `json:"max_handshake_attempts,omitempty"`
+
+	// AmneziaWG 3.1.
+	RandomTrailers bool `json:"random_trailers,omitempty"`
+	DisableCookies bool `json:"disable_cookies,omitempty"`
 }
 
 // AmneziaWGRange is an AmneziaWG numeric range. It accepts either a plain JSON

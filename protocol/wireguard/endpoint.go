@@ -167,6 +167,8 @@ func mapAmneziaWGOptions(o *option.AmneziaWGOptions) *wireguard.AmneziaWGOptions
 		RejectAfterTime:              string(o.RejectAfterTime),
 		KeepaliveTimeout:             string(o.KeepaliveTimeout),
 		MaxHandshakeAttempts:         string(o.MaxHandshakeAttempts),
+		RandomTrailers:               o.RandomTrailers,
+		DisableCookies:               o.DisableCookies,
 	}
 }
 

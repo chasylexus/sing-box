@@ -69,6 +69,10 @@ type AmneziaWGOptions struct {
 	RejectAfterTime        string
 	KeepaliveTimeout       string
 	MaxHandshakeAttempts   string
+
+	// AmneziaWG 3.1
+	RandomTrailers bool
+	DisableCookies bool
 }
 
 // GenerateIpcLines renders the AmneziaWG parameters as UAPI device-config lines.
@@ -91,6 +95,13 @@ func (o *AmneziaWGOptions) GenerateIpcLines() (string, error) {
 			b.WriteString(key)
 			b.WriteString("=")
 			b.WriteString(value)
+		}
+	}
+	writeBool := func(key string, value bool) {
+		if value {
+			b.WriteString("\n")
+			b.WriteString(key)
+			b.WriteString("=true")
 		}
 	}
 	writeInt("jc", o.JunkPacketCount)
@@ -123,6 +134,8 @@ func (o *AmneziaWGOptions) GenerateIpcLines() (string, error) {
 	writeStr("reject_after_time", o.RejectAfterTime)
 	writeStr("keepalive_timeout", o.KeepaliveTimeout)
 	writeStr("max_handshake_attempts", o.MaxHandshakeAttempts)
+	writeBool("random_trailers", o.RandomTrailers)
+	writeBool("disable_cookies", o.DisableCookies)
 	return b.String(), nil
 }
 
