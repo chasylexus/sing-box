@@ -4,6 +4,7 @@ import (
 	"net/netip"
 	"strconv"
 
+	"github.com/sagernet/sing-box/schema"
 	E "github.com/sagernet/sing/common/exceptions"
 	"github.com/sagernet/sing/common/json"
 	"github.com/sagernet/sing/common/json/badoption"
@@ -89,6 +90,12 @@ func (r *AmneziaWGRange) UnmarshalJSON(content []byte) error {
 	}
 	*r = AmneziaWGRange(strconv.FormatUint(uint64(uintValue), 10))
 	return nil
+}
+
+func (r AmneziaWGRange) DescribeSchema(builder schema.Builder) (*schema.Node, error) {
+	return builder.Define("AmneziaWGRange", func() (*schema.Node, error) {
+		return schema.AnyOf(schema.UnsignedNode(32), schema.StringNode()), nil
+	})
 }
 
 type WireGuardPeer struct {
