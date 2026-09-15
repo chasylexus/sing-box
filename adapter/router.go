@@ -22,6 +22,7 @@ type Router interface {
 	HijackDNSPacket(ctx context.Context, payload []byte, writer N.PacketWriter, metadata InboundContext)
 	ConnectionRouterEx
 	RuleSet(tag string) (RuleSet, bool)
+	RuleSets() []RuleSet
 	Rules() []Rule
 	NeedFindProcess() bool
 	NeedFindNeighbor() bool
@@ -138,6 +139,13 @@ type RuleSet interface {
 }
 
 type RuleSetUpdateCallback func(it RuleSet)
+
+// UpdatableRuleSet is implemented by rule-sets that can be refreshed on demand.
+type UpdatableRuleSet interface {
+	RuleSet
+	Update() error
+	LastUpdated() time.Time
+}
 
 type DNSRuleSetUpdateValidator interface {
 	ValidateRuleSetMetadataUpdate(tag string, metadata RuleSetMetadata) error

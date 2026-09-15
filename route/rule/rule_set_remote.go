@@ -225,12 +225,27 @@ func (s *RemoteRuleSet) loadBytes(content []byte) error {
 }
 
 func (s *RemoteRuleSet) updateOnce() {
-	err := s.fetch(s.ctx, false)
+	err := s.Update()
 	if err != nil {
 		s.logger.Error("fetch rule-set ", s.tag, ": ", err)
-	} else if s.refs.Load() == 0 {
+	}
+}
+
+func (s *RemoteRuleSet) Update() error {
+	err := s.fetch(s.ctx, false)
+	if err != nil {
+		return err
+	}
+	if s.refs.Load() == 0 {
 		s.rules = nil
 	}
+	return nil
+}
+
+func (s *RemoteRuleSet) LastUpdated() time.Time {
+	s.access.RLock()
+	defer s.access.RUnlock()
+	return s.lastUpdated
 }
 
 func (s *RemoteRuleSet) fetch(ctx context.Context, isStart bool) error {
