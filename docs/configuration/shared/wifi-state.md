@@ -4,7 +4,7 @@ icon: material/new-box
 
 # Wi-Fi State
 
-!!! quote "Changes in sing-box 1.15.0"
+!!! quote "Changes in sing-box 1.14.0"
 
     :material-plus: macOS support
 
@@ -46,6 +46,6 @@ Uses Windows WLAN API.
 
 ### macOS
 
-!!! question "Since sing-box 1.15.0"
+!!! question "Since sing-box 1.14.0"
 
 Outside the graphical client, the Wi-Fi interface is found with `networksetup -listallhardwareports` and its SSID and BSSID are read from `ipconfig getsummary`, which does not require the location permission. The state is refreshed on interface changes and polled every 15 seconds.

@@ -4,7 +4,7 @@ icon: material/new-box
 
 # Wi-Fi 状态
 
-!!! quote "sing-box 1.15.0 中的更改"
+!!! quote "sing-box 1.14.0 中的更改"
 
     :material-plus: macOS 支持
 
@@ -46,6 +46,6 @@ sing-box 可以监控 Wi-Fi 状态，以启用基于 `wifi_ssid` 和 `wifi_bssid
 
 ### macOS
 
-!!! question "自 sing-box 1.15.0 起"
+!!! question "自 sing-box 1.14.0 起"
 
 在图形客户端之外，通过 `networksetup -listallhardwareports` 找到 Wi-Fi 接口，并从 `ipconfig getsummary` 读取 SSID 与 BSSID，无需定位权限。状态在接口变化时刷新，并每 15 秒轮询一次。
