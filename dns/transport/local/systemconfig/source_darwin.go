@@ -175,6 +175,7 @@ func (s *Source) Configuration() *Config {
 		return s.config
 	}
 	config := systemInfo.build(interfaceIndex)
+	replaceOwnTunServers(config, interfaceIndex)
 	if s.config != nil && config.Equal(s.config) {
 		return s.config
 	}

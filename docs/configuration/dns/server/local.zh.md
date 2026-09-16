@@ -40,6 +40,10 @@ icon: material/new-box
 
 ### 字段
 
+!!! note "macOS"
+
+    当默认接口的系统解析器指向点对点接口（例如客户端把系统 DNS 重定向到自己创建的 tun）时，改用该接口 DHCP 租约中的服务器（`ipconfig getsummary`），使 `local` 仍能到达网络自身的解析器。
+
 #### prefer_go
 
 !!! question "自 sing-box 1.13.0 起"
