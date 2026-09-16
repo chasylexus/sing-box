@@ -1091,6 +1091,32 @@ func (s *StartedService) CloseConnection(ctx context.Context, request *CloseConn
 	return &emptypb.Empty{}, nil
 }
 
+// UpdateRuleSets refetches every remote rule-set of the running instance right
+// away, the same as PUT /providers/rules/{name} on the Clash API for each tag.
+func (s *StartedService) UpdateRuleSets(ctx context.Context, empty *emptypb.Empty) (*UpdateRuleSetsResult, error) {
+	s.serviceAccess.RLock()
+	if s.serviceStatus.Status != ServiceStatus_STARTED {
+		s.serviceAccess.RUnlock()
+		return nil, os.ErrInvalid
+	}
+	boxService := s.instance
+	s.serviceAccess.RUnlock()
+	result := &UpdateRuleSetsResult{}
+	for _, ruleSet := range boxService.instance.Router().RuleSets() {
+		updatable, isUpdatable := ruleSet.(adapter.UpdatableRuleSet)
+		if !isUpdatable {
+			continue
+		}
+		err := updatable.Update()
+		if err != nil {
+			result.Errors = append(result.Errors, ruleSet.Name()+": "+err.Error())
+			continue
+		}
+		result.Updated++
+	}
+	return result, nil
+}
+
 func (s *StartedService) CloseAllConnections(ctx context.Context, empty *emptypb.Empty) (*emptypb.Empty, error) {
 	s.serviceAccess.RLock()
 	nowService := s.instance

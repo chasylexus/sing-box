@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -589,6 +590,21 @@ func (c *CommandClient) SetClashMode(newMode string) error {
 		return E.Cause(err, "set clash mode")
 	}
 	return nil
+}
+
+// UpdateRuleSets refetches every remote rule-set now and returns how many
+// were updated; failures are joined into the error after the successful ones.
+func (c *CommandClient) UpdateRuleSets() (int32, error) {
+	result, err := callWithResult(c, func(ctx context.Context, client daemon.StartedServiceClient) (*daemon.UpdateRuleSetsResult, error) {
+		return client.UpdateRuleSets(ctx, &emptypb.Empty{})
+	})
+	if err != nil {
+		return 0, E.Cause(err, "update rule-sets")
+	}
+	if len(result.Errors) > 0 {
+		return result.Updated, E.New(strings.Join(result.Errors, "\n"))
+	}
+	return result.Updated, nil
 }
 
 func (c *CommandClient) CloseConnection(connId string) error {

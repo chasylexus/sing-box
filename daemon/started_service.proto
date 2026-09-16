@@ -25,6 +25,7 @@ service StartedService {
   rpc SubscribeConnections(SubscribeConnectionsRequest) returns(stream ConnectionEvents) {}
   rpc CloseConnection(CloseConnectionRequest) returns(google.protobuf.Empty) {}
   rpc CloseAllConnections(google.protobuf.Empty) returns(google.protobuf.Empty) {}
+  rpc UpdateRuleSets(google.protobuf.Empty) returns(UpdateRuleSetsResult) {}
   rpc GetDeprecatedWarnings(google.protobuf.Empty) returns(DeprecatedWarnings) {}
   rpc GetStartedAt(google.protobuf.Empty) returns(StartedAt) {}
 
@@ -128,6 +129,11 @@ message GroupItem {
   string type = 2;
   int64 urlTestTime = 3;
   int32 urlTestDelay = 4;
+}
+
+message UpdateRuleSetsResult {
+  int32 updated = 1;
+  repeated string errors = 2;
 }
 
 message URLTestRequest {
