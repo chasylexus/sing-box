@@ -140,10 +140,9 @@ type RuleSet interface {
 
 type RuleSetUpdateCallback func(it RuleSet)
 
-// UpdatableRuleSet is implemented by rule-sets that can be refreshed on demand.
 type UpdatableRuleSet interface {
 	RuleSet
-	Update() error
+	Update(ctx context.Context) error
 	LastUpdated() time.Time
 }
 

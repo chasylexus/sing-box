@@ -46,7 +46,7 @@ func updateRuleProvider(w http.ResponseWriter, r *http.Request) {
 		render.NoContent(w, r)
 		return
 	}
-	err := ruleSet.Update()
+	err := ruleSet.Update(r.Context())
 	if err != nil {
 		render.Status(r, http.StatusServiceUnavailable)
 		render.JSON(w, r, newError(err.Error()))
@@ -72,17 +72,17 @@ func findRuleProviderByName(router adapter.Router) func(next http.Handler) http.
 }
 
 func ruleProviderInfo(ruleSet adapter.RuleSet) render.M {
-	info := render.M{
+	vehicleType := "File"
+	var updatedAt time.Time
+	if updatable, isUpdatable := ruleSet.(adapter.UpdatableRuleSet); isUpdatable {
+		vehicleType = "HTTP"
+		updatedAt = updatable.LastUpdated()
+	}
+	return render.M{
 		"name":        ruleSet.Name(),
 		"type":        "Rule",
-		"vehicleType": "Local",
+		"vehicleType": vehicleType,
 		"behavior":    "Classical",
+		"updatedAt":   updatedAt.Format(time.RFC3339),
 	}
-	if updatable, isUpdatable := ruleSet.(adapter.UpdatableRuleSet); isUpdatable {
-		info["vehicleType"] = "HTTP"
-		if updatedAt := updatable.LastUpdated(); !updatedAt.IsZero() {
-			info["updatedAt"] = updatedAt.Format(time.RFC3339)
-		}
-	}
-	return info
 }
