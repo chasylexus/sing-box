@@ -45,7 +45,7 @@ type RemoteRuleSet struct {
 	updateInterval time.Duration
 	httpClient     *http.Client
 	access         sync.RWMutex
-	updateAccess   sync.Mutex
+	updateAccess   chan struct{}
 	rules          []adapter.HeadlessRule
 	metadata       adapter.RuleSetMetadata
 	lastUpdated    time.Time
@@ -81,6 +81,7 @@ func NewRemoteRuleSet(ctx context.Context, logger logger.ContextLogger, tag stri
 		initialPath:    initialPath,
 		options:        options,
 		updateInterval: updateInterval,
+		updateAccess:   make(chan struct{}, 1),
 		pauseManager:   service.FromContext[pause.Manager](ctx),
 	}, nil
 }
@@ -233,8 +234,16 @@ func (s *RemoteRuleSet) updateOnce() {
 }
 
 func (s *RemoteRuleSet) Update(ctx context.Context) error {
-	s.updateAccess.Lock()
-	defer s.updateAccess.Unlock()
+	select {
+	case s.updateAccess <- struct{}{}:
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-s.ctx.Done():
+		return s.ctx.Err()
+	}
+	defer func() {
+		<-s.updateAccess
+	}()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	stop := context.AfterFunc(s.ctx, cancel)
