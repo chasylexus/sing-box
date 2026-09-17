@@ -42,7 +42,7 @@ icon: material/new-box
 
 !!! note "macOS"
 
-    当默认接口的系统解析器指向点对点接口（例如客户端把系统 DNS 重定向到自己创建的 tun）时，改用该接口 DHCP 租约中的服务器（`ipconfig getsummary`），使 `local` 仍能到达网络自身的解析器。
+    当默认接口的系统解析器指向由此 sing-box 实例创建的 tun 接口（例如客户端将系统 DNS 重定向到该接口后）时，改用默认接口 DHCP 租约中的服务器（`ipconfig getsummary`）。
 
 #### prefer_go
 

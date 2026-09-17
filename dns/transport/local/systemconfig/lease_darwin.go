@@ -1,23 +1,22 @@
-//go:build darwin
+//go:build darwin && cgo
 
 package systemconfig
 
 import (
+	"context"
 	"net"
 	"net/netip"
+	"os/exec"
 	"regexp"
 	"strings"
+	"time"
 
+	"github.com/sagernet/sing/common"
 	M "github.com/sagernet/sing/common/metadata"
-	"github.com/sagernet/sing/common/shell"
 )
 
-// Clients that hijack DNS point the system resolver at their own tun, so the
-// scoped resolver of the default interface names an address on that tun and a
-// query dialed from the physical interface goes nowhere. The DHCP lease still
-// carries the network's own servers; use those in that case.
-func replaceOwnTunServers(config *Config, interfaceIndex int) {
-	if interfaceIndex == 0 || !serversOnPointToPointInterface(config.Servers) {
+func replaceOwnTunServers(config *Config, interfaceIndex int, myInterfaces []string) {
+	if interfaceIndex == 0 || !serversOnInterfaces(config.Servers, myInterfaces) {
 		return
 	}
 	iface, err := net.InterfaceByIndex(interfaceIndex)
@@ -29,25 +28,14 @@ func replaceOwnTunServers(config *Config, interfaceIndex int) {
 	}
 }
 
-func serversOnPointToPointInterface(servers []M.Socksaddr) bool {
+func serversOnInterfaces(servers []M.Socksaddr, interfaceNames []string) bool {
 	if len(servers) == 0 {
 		return false
 	}
-	interfaces, err := net.Interfaces()
-	if err != nil {
-		return false
-	}
-	for _, server := range servers {
-		if !server.Addr.IsValid() || !isPointToPointAddress(interfaces, server.Addr) {
-			return false
-		}
-	}
-	return true
-}
-
-func isPointToPointAddress(interfaces []net.Interface, addr netip.Addr) bool {
-	for _, iface := range interfaces {
-		if iface.Flags&net.FlagPointToPoint == 0 {
+	var interfaceAddresses []*net.IPNet
+	for _, interfaceName := range interfaceNames {
+		iface, err := net.InterfaceByName(interfaceName)
+		if err != nil {
 			continue
 		}
 		addresses, err := iface.Addrs()
@@ -55,22 +43,28 @@ func isPointToPointAddress(interfaces []net.Interface, addr netip.Addr) bool {
 			continue
 		}
 		for _, address := range addresses {
-			if ipNet, isIPNet := address.(*net.IPNet); isIPNet && ipNet.Contains(addr.AsSlice()) {
-				return true
+			if ipNet, isIPNet := address.(*net.IPNet); isIPNet {
+				interfaceAddresses = append(interfaceAddresses, ipNet)
 			}
 		}
 	}
-	return false
+	return common.All(servers, func(server M.Socksaddr) bool {
+		return server.Addr.IsValid() && common.Any(interfaceAddresses, func(it *net.IPNet) bool {
+			return it.Contains(server.Addr.AsSlice())
+		})
+	})
 }
 
 var leaseServersRegexp = regexp.MustCompile(`(?m)^\s*domain_name_server \((?:ip|ip_mult)\): \{?([^}\n]*)\}?$`)
 
 func leaseServers(interfaceName string) []M.Socksaddr {
-	output, err := shell.Exec("/usr/sbin/ipconfig", "getsummary", interfaceName).ReadOutput()
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	output, err := exec.CommandContext(ctx, "/usr/sbin/ipconfig", "getsummary", interfaceName).Output()
 	if err != nil {
 		return nil
 	}
-	return parseLeaseServers(output)
+	return parseLeaseServers(string(output))
 }
 
 func parseLeaseServers(summary string) []M.Socksaddr {
@@ -79,7 +73,7 @@ func parseLeaseServers(summary string) []M.Socksaddr {
 		return nil
 	}
 	var servers []M.Socksaddr
-	for _, field := range strings.Split(match[1], ",") {
+	for field := range strings.SplitSeq(match[1], ",") {
 		addr, err := netip.ParseAddr(strings.TrimSpace(field))
 		if err != nil {
 			continue

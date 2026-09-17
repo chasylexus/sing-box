@@ -42,7 +42,7 @@ icon: material/new-box
 
 !!! note "macOS"
 
-    When the system resolver of the default interface points at a point-to-point interface, such as the tun the client itself created after redirecting the system DNS to it, the servers from the interface's DHCP lease (`ipconfig getsummary`) are used instead, so `local` still reaches the network's own resolver.
+    When the system resolver of the default interface points at the tun interface created by this sing-box instance (e.g. after the client redirected the system DNS to it), the servers from the DHCP lease of the default interface (`ipconfig getsummary`) are used instead.
 
 #### prefer_go
 
